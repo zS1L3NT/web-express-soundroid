@@ -15,7 +15,6 @@ const IO = new Server(server, {
 	pingInterval: 300000
 })
 const PORT = 5190
-const SONG_URL = "http://soundroid.zectan.com/songs"
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path)
 
 app.use(express.json())
@@ -25,9 +24,11 @@ IO.on("connection", socket => {
 	socket.on("convert_song", (...args) => {
 		convert_song(
 			(event: string, data: any) => IO.emit(event, data),
-			SONG_URL,
 			args
 		)
+	})
+	socket.on("search", (...args) => {
+
 	})
 })
 
