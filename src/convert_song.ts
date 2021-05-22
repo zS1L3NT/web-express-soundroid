@@ -45,7 +45,7 @@ export default async (
 	}
 
 	const totalSeconds = parseInt(info.videoDetails.lengthSeconds)
-	sendToClient("song_downloading_" + id, totalSeconds)
+	sendToClient("song_downloading_" + id, "")
 
 	if (fs.existsSync(readyWritePath(id))) {
 		console.log(TAG, "File being created, waiting for callback...")
@@ -73,8 +73,11 @@ export default async (
 					parseInt(hours) * 3600 +
 					parseInt(minutes) * 60 +
 					parseInt(seconds)
-				sendToClient("song_download_progress_" + id, currentSeconds)
-				console.log(TAG, `${progress.timemark} => ${currentSeconds}`)
+				const percent = Math.round(
+					100 * (currentSeconds / totalSeconds)
+				)
+				sendToClient("song_download_progress_" + id, percent)
+				console.log(TAG, `${progress.timemark} => ${percent}%`)
 			} else {
 				console.log(TAG, progress.timemark)
 			}
