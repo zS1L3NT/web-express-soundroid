@@ -1,26 +1,28 @@
-import { v4 } from "uuid"
 import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import fs from "fs"
 import ytdl from "ytdl-core"
 
-const SONG_URL = "http://soundroid.zectan.com/songs"
+const config = require("../../config.json")
+
 const readyWritePath = (id: string) =>
-	path.join(__dirname, "..", "ready", id + ".mp3")
+	path.join(__dirname, "..", "..", "ready", id + ".mp3")
 const songsWritePath = (id: string) =>
-	path.join(__dirname, "..", "songs", id + ".mp3")
+	path.join(__dirname, "..", "..", "songs", id + ".mp3")
 
 /**
  * Endpoint to convert or wait for a song
  *
- * @param {string} id ID of YouTube video
+ * @param sendToClient
+ * @param args
  */
 export default async (
 	sendToClient: (event: string, data: any) => void,
 	...args: any[]
 ) => {
-	const TAG = "convert_song[" + v4() + "]:"
-	const id = args[0] as string
+	const [uuid, id] = args as string[]
+	const TAG = "convert_song[" + uuid + "]:"
+	if (!uuid) return
 	if (!id) return sendToClient("error_" + id, "Missing id")
 	console.time(TAG)
 	console.log(TAG)
@@ -29,7 +31,7 @@ export default async (
 	if (fs.existsSync(songsWritePath(id))) {
 		console.log(TAG, `File exists, sending "${id}"`)
 		console.timeEnd(TAG)
-		return sendToClient("song_converted_" + id, `${SONG_URL}/${id}.mp3`)
+		return sendToClient("song_converted_" + id, `${config.songs}/${id}.mp3`)
 	}
 
 	let info: ytdl.videoInfo
@@ -68,7 +70,7 @@ export default async (
 			const TimeRegex = new RegExp("(\\d\\d):(\\d\\d):(\\d\\d).(\\d\\d)")
 			const TimeMatch = progress.timemark.match(TimeRegex)
 			if (TimeMatch) {
-				const [_, hours, minutes, seconds] = TimeMatch
+				const [, hours, minutes, seconds] = TimeMatch
 				const currentSeconds =
 					parseInt(hours) * 3600 +
 					parseInt(minutes) * 60 +
@@ -78,7 +80,8 @@ export default async (
 				)
 				sendToClient("song_download_progress_" + id, percent)
 				console.log(TAG, `${progress.timemark} => ${percent}%`)
-			} else {
+			}
+			else {
 				console.log(TAG, progress.timemark)
 			}
 		})
@@ -86,7 +89,7 @@ export default async (
 			console.log(TAG, "File created, sending to all: " + id)
 			console.timeEnd(TAG)
 			fs.renameSync(readyWritePath(id), songsWritePath(id))
-			sendToClient("song_converted_" + id, `${SONG_URL}/${id}.mp3`)
+			sendToClient("song_converted_" + id, `${config.songs}/${id}.mp3`)
 		})
 		.on("error", err => {
 			console.error(TAG, err)

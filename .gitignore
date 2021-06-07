@@ -1,9 +1,5 @@
 /node_modules
+/.idea
 /build
-nodemon.json
-*.js.map
-**/serviceAccountKey.json
-**/token.json
-.rest
-spotifyToken.json
-src/index.html
+config.json
+*.test.*
