@@ -3,7 +3,7 @@ import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import http from "http"
 import {Server} from "socket.io"
-import {convert_song, cover_color, search_all} from "./all"
+import {convert_song, playlist_lookup, search} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -24,14 +24,21 @@ app.use(express.json())
 app.use("/songs", express.static(path.join(__dirname, "..", "songs")))
 
 IO.on("connection", socket => {
+	const sendToClient = (ev: string, tag: string, ...args: any[]) => {
+		IO.emit(ev + "_" + tag, ...args)
+	}
+
 	socket.on("convert_song", (...args) => {
-		convert_song(IO.emit.bind(IO), ...args).then()
+		convert_song(sendToClient, ...args).then()
 	})
-	socket.on("search_all", (...args) => {
-		search_all(IO.emit.bind(IO), youtubeApi, ...args)
+	socket.on("playlist_lookup", (...args) => {
+		playlist_lookup(sendToClient, youtubeApi, ...args).then()
 	})
-	socket.on("cover_color", (...args) => {
-		cover_color(IO.emit.bind(IO), ...args).then()
+	socket.on("search", (...args) => {
+		search(sendToClient, youtubeApi, ...args).then()
+	})
+	socket.onAny((...args) => {
+		console.log("Socket", ...args)
 	})
 })
 
