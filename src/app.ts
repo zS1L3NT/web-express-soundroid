@@ -24,6 +24,7 @@ app.use(express.json())
 app.use("/songs", express.static(path.join(__dirname, "..", "songs")))
 
 IO.on("connection", socket => {
+	let inactive = false
 	const sendToClient = (ev: string, tag: string, ...args: any[]) => {
 		IO.emit(ev + "_" + tag, ...args)
 	}
@@ -32,14 +33,16 @@ IO.on("connection", socket => {
 		convert_song(sendToClient, ...args).then()
 	})
 	socket.on("playlist_lookup", (...args) => {
-		playlist_lookup(sendToClient, youtubeApi, ...args).then()
+		playlist_lookup(sendToClient, () => inactive, youtubeApi, ...args).then()
 	})
 	socket.on("search", (...args) => {
-		search(sendToClient, youtubeApi, ...args).then()
+		search(sendToClient, () => inactive, youtubeApi, ...args).then()
 	})
 	socket.onAny((...args) => {
 		console.log("Socket", ...args)
 	})
+
+	socket.on("disconnect", () => inactive = true)
 })
 
 youtubeApi.initalize().then(() => console.log("Initialized YouTube API"))
