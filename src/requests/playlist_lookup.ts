@@ -26,25 +26,27 @@ export default async (
 		console.timeEnd(TAG)
 	}
 
-	const songs: Song[] = []
 	try {
 		const response = await youtubeApi.getAlbum(id)
 		if (inactive()) return destroy()
 
+		const songs: Song[] = []
 		for (let i = 0; i < response.tracks.length; i++) {
-			const song = response.tracks[i]
-			songs.push({
+			const track = response.tracks[i]
+			const song: Song = {
 				type: "Song",
-				id: song.videoId,
-				title: song.name,
-				artiste: song.artistNames,
-				cover: song.thumbnails[song.thumbnails.length - 1].url,
-				colorHex: await color_thief(song.thumbnails[song.thumbnails.length - 1].url)
-			})
+				id: track.videoId,
+				title: track.name,
+				artiste: track.artistNames,
+				cover: track.thumbnails[track.thumbnails.length - 1].url,
+				colorHex: await color_thief(track.thumbnails[track.thumbnails.length - 1].url)
+			}
+			songs.push(song)
+			sendToClient("playlist_item", id, song)
 			if (inactive()) return destroy()
 		}
 
-		console.log(TAG, "Playlist songs: " + songs.length)
+		sendToClient("playlist_lookup", id, songs.map(song => song.id))
 	} catch (err) {
 		if (inactive()) return destroy()
 		console.error(TAG, err)
@@ -52,6 +54,5 @@ export default async (
 		return
 	}
 
-	sendToClient("playlist_lookup", id, songs)
 	console.timeEnd(TAG)
 }

@@ -29,9 +29,6 @@ IO.on("connection", socket => {
 		IO.emit(ev + "_" + tag, ...args)
 	}
 
-	socket.on("convert_song", (...args) => {
-		convert_song(sendToClient, ...args).then()
-	})
 	socket.on("playlist_lookup", (...args) => {
 		playlist_lookup(sendToClient, () => inactive, youtubeApi, ...args).then()
 	})
@@ -43,6 +40,21 @@ IO.on("connection", socket => {
 	})
 
 	socket.on("disconnect", () => inactive = true)
+})
+
+app.get("/songs/:filename", (req, res) => {
+	const filename = req.params.filename
+
+	const IDRegex = filename.match(/^(.+)\.mp3$/)
+	if (IDRegex) {
+		const id = IDRegex[1]
+		convert_song(id)
+			.then(res.redirect.bind(res))
+			.catch(err => res.status(400).send(err.message))
+	}
+	else {
+		res.status(400).send("Cannot GET /songs/" + filename)
+	}
 })
 
 youtubeApi.initalize().then(() => console.log("Initialized YouTube API"))
