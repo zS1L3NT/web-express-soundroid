@@ -46,7 +46,7 @@ export default async (
 			if (inactive()) return destroy()
 		}
 
-		sendToClient("playlist_lookup", id, songs.map(song => song.id))
+		sendToClient("playlist_lookup", id, songs)
 	} catch (err) {
 		if (inactive()) return destroy()
 		console.error(TAG, err)

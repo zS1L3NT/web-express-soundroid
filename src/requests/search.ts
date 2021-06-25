@@ -10,10 +10,10 @@ import {v4} from "uuid"
  * @param args
  */
 export default async (
-	sendToClient: (event: string, tag: string, data: any) => void,
+	sendToClient: (event: string, tag: string, data) => void,
 	inactive: () => boolean,
-	youtubeApi: any,
-	...args: any[]
+	youtubeApi,
+	...args
 ) => {
 	const [query] = args as string[]
 	const TAG = "search[" + v4() + "]"
@@ -37,33 +37,12 @@ export default async (
 			const songs_ = res[0].value.content
 			const songs = songs_.slice(0, songs_.length >= 15 ? 15 : songs_.length)
 
-			await Promise.allSettled(
-				[
-					...playlists.map((playlist: any) => new Promise(async (resolve, reject) => {
-						if (inactive()) return reject(null)
-						sendToClient("search_result", query, {
-							type: "Playlist",
-							id: playlist.browseId,
-							name: playlist.name,
-							cover: playlist.thumbnails[playlist.thumbnails.length - 1].url,
-							colorHex: await color_thief(playlist.thumbnails[playlist.thumbnails.length - 1].url)
-						} as Playlist)
-						resolve(null)
-					})), ...songs.map((song: any) => new Promise(async (resolve, reject) => {
-					if (inactive()) return reject(null)
-					sendToClient("search_result", query, {
-						type: "Song",
-						id: song.videoId,
-						title: song.name,
-						artiste: Array.isArray(song.artist) ? song.artist.map((a: any) => a.name).join(", ") : song.artist.name,
-						cover: `https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`,
-						colorHex: await color_thief(`https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`)
-					} as Song)
-					resolve(null)
-				}))])
+			const results = await Promise.allSettled(promises(playlists, songs))
+			const successResults = results.filter(result => result.status === "fulfilled") as PromiseFulfilledResult<Song | Playlist>[]
+			const successValues = successResults.map(result => result.value)
 
 			if (inactive()) return destroy()
-			sendToClient("search_done", query, null)
+			sendToClient("search_done", query, successValues)
 		}
 		else {
 			console.error(TAG, JSON.stringify(res, null, 2))
@@ -72,5 +51,34 @@ export default async (
 		console.timeEnd(TAG)
 	})
 
+	const promises: (playlists, songs) => (Promise<Song> | Promise<Playlist>)[] = (playlists, songs) =>
+		[...playlists.map(playlist => playlistPromise(playlist)), ...songs.map(song => songPromise(song))]
 
+	const playlistPromise = playlist => new Promise<Playlist>(async (resolve, reject) => {
+		if (inactive()) return reject(null)
+		const item: Playlist = {
+			type: "Playlist",
+			id: playlist.browseId,
+			name: playlist.name,
+			cover: playlist.thumbnails[playlist.thumbnails.length - 1].url,
+			colorHex: await color_thief(playlist.thumbnails[playlist.thumbnails.length - 1].url),
+			order: (await youtubeApi.getAlbum(playlist.browseId)).tracks.map(track => track.videoId)
+		}
+		sendToClient("search_result", query, item)
+		resolve(item)
+	})
+
+	const songPromise = song => new Promise<Song>(async (resolve, reject) => {
+		if (inactive()) return reject(null)
+		const item: Song = {
+			type: "Song",
+			id: song.videoId,
+			title: song.name,
+			artiste: Array.isArray(song.artist) ? song.artist.map((a: any) => a.name).join(", ") : song.artist.name,
+			cover: `https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`,
+			colorHex: await color_thief(`https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`)
+		}
+		sendToClient("search_result", query, item)
+		resolve(item)
+	})
 }
