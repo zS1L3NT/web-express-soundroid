@@ -25,7 +25,7 @@ admin.initializeApp({
 })
 
 app.use(express.json())
-app.use("/songs", express.static(path.join(__dirname, "..", "songs")))
+app.use("/song", express.static(path.join(__dirname, "..", "song")))
 
 IO.on("connection", socket => {
 	let inactive = false
@@ -65,7 +65,7 @@ app.put("/playlist/save", async (req, res) => {
 		.catch(err => res.status(400).send(err.message))
 })
 
-app.get("/songs/:filename", (req, res) => {
+app.get("/song/:filename", (req, res) => {
 	const filename = req.params.filename
 
 	const IDRegex = filename.match(/^(.+)\.mp3$/)
@@ -76,7 +76,7 @@ app.get("/songs/:filename", (req, res) => {
 			.catch(err => res.status(400).send(err.message))
 	}
 	else {
-		res.status(400).send("Cannot GET /songs/" + filename)
+		res.status(400).send("Cannot GET /song/" + filename)
 	}
 })
 
