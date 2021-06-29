@@ -61,8 +61,10 @@ export default async (
 			id: playlist.browseId,
 			name: playlist.name,
 			cover: playlist.thumbnails[playlist.thumbnails.length - 1].url,
+			userId: "",
 			colorHex: await color_thief(playlist.thumbnails[playlist.thumbnails.length - 1].url),
-			order: (await youtubeApi.getAlbum(playlist.browseId)).tracks.map(track => track.videoId)
+			order: (await youtubeApi.getAlbum(playlist.browseId)).tracks.map(track => track.videoId),
+			queries: getQueries(playlist.name)
 		}
 		sendToClient("search_result", query, item)
 		resolve(item)
@@ -72,13 +74,24 @@ export default async (
 		if (inactive()) return reject(null)
 		const item: Song = {
 			type: "Song",
-			id: song.videoId,
+			songId: song.videoId,
 			title: song.name,
 			artiste: Array.isArray(song.artist) ? song.artist.map((a: any) => a.name).join(", ") : song.artist.name,
 			cover: `https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`,
-			colorHex: await color_thief(`https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`)
+			colorHex: await color_thief(`https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`),
+			playlistId: "",
+			userId: "",
+			queries: getQueries(song.name)
 		}
 		sendToClient("search_result", query, item)
 		resolve(item)
 	})
+}
+
+const getQueries = (str: string) => {
+	const queries: string[] = []
+	for (let i = 0; i < str.length; i++) {
+		queries.push(str.slice(0, i + 1).toLowerCase())
+	}
+	return queries
 }

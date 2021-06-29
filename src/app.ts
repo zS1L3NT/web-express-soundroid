@@ -2,8 +2,9 @@ import express from "express"
 import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import http from "http"
+import admin from "firebase-admin"
 import {Server} from "socket.io"
-import {convert_song, playlist_lookup, search} from "./all"
+import {convert_song, delete_playlist, playlist_songs, save_playlist, search} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -19,6 +20,9 @@ const IO = new Server(server, {
 })
 const PORT = 5190
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path)
+admin.initializeApp({
+	credential: admin.credential.cert(require("../config.json").firebase.service_account)
+})
 
 app.use(express.json())
 app.use("/songs", express.static(path.join(__dirname, "..", "songs")))
@@ -29,9 +33,6 @@ IO.on("connection", socket => {
 		IO.emit(ev + "_" + tag, ...args)
 	}
 
-	socket.on("playlist_lookup", (...args) => {
-		playlist_lookup(sendToClient, () => inactive, youtubeApi, ...args).then()
-	})
 	socket.on("search", (...args) => {
 		search(sendToClient, () => inactive, youtubeApi, ...args).then()
 	})
@@ -40,6 +41,28 @@ IO.on("connection", socket => {
 	})
 
 	socket.on("disconnect", () => inactive = true)
+})
+
+app.get("/playlist/:playlist_id/songs", (req, res) => {
+	const playlist_id = req.params.playlist_id
+
+	playlist_songs(playlist_id, youtubeApi)
+		.then(songs => res.status(200).send(songs))
+		.catch(err => res.status(400).send(err.message))
+})
+
+app.delete("/playlist/:playlist_id/delete", (req, res) => {
+	const playlist_id = req.params.playlist_id
+
+	delete_playlist(admin.firestore(), playlist_id)
+		.then(() => res.status(200).send())
+		.catch(err => res.status(400).send(err.message))
+})
+
+app.put("/playlist/save", async (req, res) => {
+	save_playlist(admin.firestore(), youtubeApi, req.body)
+		.then(() => res.status(200).send())
+		.catch(err => res.status(400).send(err.message))
 })
 
 app.get("/songs/:filename", (req, res) => {
