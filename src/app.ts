@@ -4,7 +4,7 @@ import path from "path"
 import http from "http"
 import admin from "firebase-admin"
 import {Server} from "socket.io"
-import {convert_song, delete_playlist, playlist_songs, save_playlist, search} from "./all"
+import {convert_song, delete_playlist, edit_playlist, playlist_songs, save_playlist, search} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -55,6 +55,12 @@ app.delete("/playlist/:playlist_id/delete", (req, res) => {
 	const playlist_id = req.params.playlist_id
 
 	delete_playlist(admin.firestore(), playlist_id)
+		.then(() => res.status(200).send())
+		.catch(err => res.status(400).send(err.message))
+})
+
+app.put("/playlist/edit", (req, res) => {
+	edit_playlist(admin.firestore(), req.body)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
 })

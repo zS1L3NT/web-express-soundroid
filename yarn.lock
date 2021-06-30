@@ -571,6 +571,11 @@ combined-stream@^1.0.6, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
+compare-lists@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/compare-lists/-/compare-lists-1.0.10.tgz#907ebf9e52de5dc4f53f4222a0654b2af90e954f"
+  integrity sha512-VFBH+rsO5+FbyuFbJ6aQsOGICDXZu09w3yxQP+8b/7qDj3W3m5sNmK2DoFHfUwAH01RpJtb6fzEqhWy/Cxwg1g==
+
 component-emitter@~1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/component-emitter/-/component-emitter-1.3.0.tgz#16e4070fba8ae29b679f2215853ee181ab2eabc0"
