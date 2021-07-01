@@ -1,7 +1,6 @@
 import path from "path"
 import fs from "fs"
 import ytdl from "ytdl-core"
-import {v4} from "uuid"
 import {convert_song} from "../all";
 
 const songsWritePath = (id: string) =>
@@ -9,34 +8,25 @@ const songsWritePath = (id: string) =>
 
 let converting: string[] = []
 
-/**
- * Endpoint to convert or wait for a song
- *
+export default async (TAG: string, songId: string) => new Promise<string>(async (resolve, reject) => {
+	if (!songId) return reject("Missing id")
 
- */
-export default async (
-	id: string
-) => new Promise<string>(async (resolve, reject) => {
-	const TAG = "convert_song[" + v4() + "]:"
-	if (!id) return reject("Missing id")
-	console.time(TAG)
-	console.log(TAG)
+	console.log(TAG, `Song`, songId)
 
-	if (converting.includes(id)) {
+	if (converting.includes(songId)) {
 		console.log(TAG, "Converting already, waiting for file...")
 		await new Promise(res => setTimeout(res, 1000))
-		resolve(await convert_song(id))
+		resolve(await convert_song(TAG, songId))
 		return
 	}
 
-	const url = "https://youtu.be/" + id
+	const url = "https://youtu.be/" + songId
 	try {
-		console.log(TAG, "Fetching: " + id)
+		console.log(TAG, "Fetching: " + songId)
 		await ytdl.getBasicInfo(url)
-		console.log(TAG, "Found   : " + id)
+		console.log(TAG, "Found   : " + songId)
 	} catch (e) {
 		console.error(TAG, "Invalid YouTube ID")
-		console.timeEnd(TAG)
 		return reject("Invalid YouTube ID")
 	}
 
@@ -46,19 +36,17 @@ export default async (
 	})
 
 	console.log(TAG, "File creating...")
-	converting.push(id)
+	converting.push(songId)
 	youtubeStream
-		.pipe(fs.createWriteStream(songsWritePath(id)))
+		.pipe(fs.createWriteStream(songsWritePath(songId)))
 		.on("finish", () => {
-			console.log(TAG, "Created File: " + id)
-			console.timeEnd(TAG)
-			resolve(`/song/${id}.mp3`)
-			converting = converting.filter(i => i !== id)
+			console.log(TAG, "Created File: " + songId)
+			resolve(`/song/${songId}.mp3`)
+			converting = converting.filter(i => i !== songId)
 		})
 		.on("error", err => {
 			console.error(TAG, err)
-			console.timeEnd(TAG)
 			reject(`Error converting song on Server`)
-			converting = converting.filter(i => i !== id)
+			converting = converting.filter(i => i !== songId)
 		})
 })

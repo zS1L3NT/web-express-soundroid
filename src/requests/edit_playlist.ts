@@ -1,30 +1,20 @@
 import admin from "firebase-admin"
 import {Playlist} from "../all";
-import {v4} from "uuid";
 import {compareLists} from "compare-lists";
 
-export default async (firestore: admin.firestore.Firestore, body: any) => {
+export default async (TAG: string, firestore: admin.firestore.Firestore, body: any) => {
 	const playlist = body as Playlist
 	const songsColl = firestore.collection("songs")
 
-	const TAG = "edit_playlist[" + v4() + "]:"
-	console.time(TAG)
 	console.log(TAG, "Data", playlist)
 
-	let snap
-	try {
-		snap = await firestore
-			.collection("playlists")
-			.doc(playlist.id)
-			.get()
-	} catch (e) {
-		console.timeEnd(TAG)
-		throw e
-	}
+	const snap = await firestore
+		.collection("playlists")
+		.doc(playlist.id)
+		.get()
 
 	if (!snap.exists) {
-		console.timeEnd(TAG)
-		console.log(TAG, "Cannot find playlist document in database")
+		console.log(TAG, "Document not found in database")
 		throw new Error("Document not found in database")
 	}
 	const data = snap.data() as Playlist
@@ -54,5 +44,4 @@ export default async (firestore: admin.firestore.Firestore, body: any) => {
 		.set(playlist)
 
 	await Promise.allSettled(promises)
-	console.timeEnd(TAG)
 }

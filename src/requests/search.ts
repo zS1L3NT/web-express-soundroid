@@ -16,7 +16,7 @@ export default async (
 	...args
 ) => {
 	const [query] = args as string[]
-	const TAG = "search[" + v4() + "]"
+	const TAG = `search<${v4()}>:`
 	if (!query) return sendToClient("error", query, "Missing query")
 	console.time(TAG)
 	console.log(TAG, "Search: " + query)
@@ -26,10 +26,12 @@ export default async (
 		console.timeEnd(TAG)
 	}
 
+	console.time(TAG + " YouTube API Responded")
 	Promise.allSettled([
 		youtubeApi.search(query, "song"),
 		youtubeApi.search(query, "album")
 	]).then(async res => {
+		console.timeEnd(TAG + " YouTube API Responded")
 		if (inactive()) return destroy()
 		if (res[0].status === "fulfilled" && res[1].status === "fulfilled") {
 			const playlists_ = res[1].value.content.filter((a: any) => a.type === "album")

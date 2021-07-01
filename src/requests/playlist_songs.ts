@@ -1,19 +1,8 @@
 import {color_thief, Song} from "../all"
-import {v4} from "uuid"
 
-/**
- * Endpoint to get more details from the playlist
- *
- * @param id
- * @param youtubeApi
- */
-export default async (
-	id: any,
-	youtubeApi: any
-) => {
-	const TAG = "playlist_songs[" + v4() + "]:"
+export default async (TAG: string, id: any, youtubeApi: any) => {
 	if (!id) throw new Error("Missing Playlist ID")
-	console.time(TAG)
+
 	console.log(TAG, "Playlist ID: " + id)
 
 	const response = await youtubeApi.getAlbum(id)
@@ -33,14 +22,7 @@ export default async (
 			queries: getQueries(track.name)
 		} as Song))())
 	}
-	try {
-		const songs = await Promise.all(promises)
-		console.timeEnd(TAG)
-		return songs
-	} catch (e) {
-		console.timeEnd(TAG)
-		throw e
-	}
+	return await Promise.all(promises)
 }
 
 const getQueries = (str: string) => {

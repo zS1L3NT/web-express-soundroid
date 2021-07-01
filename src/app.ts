@@ -4,6 +4,7 @@ import path from "path"
 import http from "http"
 import admin from "firebase-admin"
 import {Server} from "socket.io"
+import {v4} from "uuid"
 import {convert_song, delete_playlist, edit_playlist, playlist_songs, save_playlist, search} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
@@ -37,38 +38,52 @@ IO.on("connection", socket => {
 		search(sendToClient, () => inactive, youtubeApi, ...args).then()
 	})
 	socket.onAny((...args) => {
-		console.log("Socket", ...args)
+		console.log("Socket", args)
 	})
 
 	socket.on("disconnect", () => inactive = true)
 })
 
-app.get("/playlist/:playlist_id/songs", (req, res) => {
-	const playlist_id = req.params.playlist_id
+app.get("/playlist/songs", (req, res) => {
+	const TAG = `playlist_songs<${v4()}>:`
+	console.time(TAG)
+	const playlistId = req.query.playlistId
 
-	playlist_songs(playlist_id, youtubeApi)
+	playlist_songs(TAG, playlistId, youtubeApi)
 		.then(songs => res.status(200).send(songs))
 		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
 })
 
-app.delete("/playlist/:playlist_id/delete", (req, res) => {
-	const playlist_id = req.params.playlist_id
+app.delete("/playlist/delete", (req, res) => {
+	const TAG = `delete_playlist<${v4()}>:`
+	console.time(TAG)
+	const playlistId = req.body.playlistId
 
-	delete_playlist(admin.firestore(), playlist_id)
+	delete_playlist(TAG, admin.firestore(), playlistId)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
 })
 
 app.put("/playlist/edit", (req, res) => {
-	edit_playlist(admin.firestore(), req.body)
+	const TAG = `edit_playlist<${v4()}>:`
+	console.time(TAG)
+
+	edit_playlist(TAG, admin.firestore(), req.body)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
 })
 
 app.put("/playlist/save", async (req, res) => {
-	save_playlist(admin.firestore(), youtubeApi, req.body)
+	const TAG = `save_playlist<${v4()}>:`
+	console.time(TAG)
+
+	save_playlist(TAG, admin.firestore(), youtubeApi, req.body)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
 })
 
 app.get("/song/:filename", (req, res) => {
@@ -76,10 +91,13 @@ app.get("/song/:filename", (req, res) => {
 
 	const IDRegex = filename.match(/^(.+)\.mp3$/)
 	if (IDRegex) {
-		const id = IDRegex[1]
-		convert_song(id)
+		const TAG = `save_playlist<${v4()}>:`
+		console.time(TAG)
+
+		convert_song(TAG, IDRegex[1])
 			.then(res.redirect.bind(res))
 			.catch(err => res.status(400).send(err.message))
+			.finally(() => console.timeEnd(TAG))
 	}
 	else {
 		res.status(400).send("Cannot GET /song/" + filename)
