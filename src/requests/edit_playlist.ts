@@ -1,34 +1,34 @@
 import admin from "firebase-admin"
-import {Playlist} from "../all";
+import {color_thief, Playlist} from "../all";
 import {compareLists} from "compare-lists";
 
 export default async (TAG: string, firestore: admin.firestore.Firestore, body: any) => {
-	const playlist = body as Playlist
+	const newPlaylist = body as Playlist
 	const songsColl = firestore.collection("songs")
 
-	console.log(TAG, "Data", playlist)
+	console.log(TAG, "Data", newPlaylist)
 
 	const snap = await firestore
 		.collection("playlists")
-		.doc(playlist.id)
+		.doc(newPlaylist.id)
 		.get()
 
 	if (!snap.exists) {
 		console.log(TAG, "Document not found in database")
 		throw new Error("Document not found in database")
 	}
-	const data = snap.data() as Playlist
+	const oldPlaylist = snap.data() as Playlist
 
 	const report = compareLists({
-		left: data.order.slice().sort(),
-		right: playlist.order.slice().sort(),
+		left: oldPlaylist.order.slice().sort(),
+		right: newPlaylist.order.slice().sort(),
 		compare: (left, right) => left.localeCompare(right),
 		returnReport: true
 	})
 
 	const promises: Promise<any>[] = report.missingInRight.map(async songId => {
 		const snaps = await songsColl
-			.where("playlistId", "==", playlist.id)
+			.where("playlistId", "==", newPlaylist.id)
 			.where("songId", "==", songId)
 			.get()
 
@@ -38,10 +38,14 @@ export default async (TAG: string, firestore: admin.firestore.Firestore, body: a
 		}
 	})
 
+	if (oldPlaylist.cover !== newPlaylist.cover) {
+		newPlaylist.colorHex = await color_thief(newPlaylist.cover)
+	}
+
 	await firestore
 		.collection("playlists")
-		.doc(playlist.id)
-		.set(playlist)
+		.doc(newPlaylist.id)
+		.set(newPlaylist)
 
 	await Promise.allSettled(promises)
 }
