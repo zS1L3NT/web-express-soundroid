@@ -1,9 +1,8 @@
 import admin from "firebase-admin"
 import {color_thief, Playlist} from "../all";
-import {compareLists} from "compare-lists";
 
 export default async (TAG: string, firestore: admin.firestore.Firestore, body: any) => {
-	const newPlaylist = body as Playlist
+	const {info: newPlaylist, removed} = body as { info: Playlist, removed: string[] }
 	const songsColl = firestore.collection("songs")
 
 	console.log(TAG, "Data", newPlaylist)
@@ -19,14 +18,7 @@ export default async (TAG: string, firestore: admin.firestore.Firestore, body: a
 	}
 	const oldPlaylist = snap.data() as Playlist
 
-	const report = compareLists({
-		left: oldPlaylist.order.slice().sort(),
-		right: newPlaylist.order.slice().sort(),
-		compare: (left, right) => left.localeCompare(right),
-		returnReport: true
-	})
-
-	const promises: Promise<any>[] = report.missingInRight.map(async songId => {
+	const promises: Promise<any>[] = removed.map(async songId => {
 		const snaps = await songsColl
 			.where("playlistId", "==", newPlaylist.id)
 			.where("songId", "==", songId)

@@ -12,7 +12,6 @@
 		"@ffmpeg-installer/ffmpeg": "^1.0.20",
 		"axios": "^0.21.1",
 		"colorthief": "^2.3.2",
-		"compare-lists": "^1.0.10",
 		"express": "^4.17.1",
 		"firebase-admin": "^9.8.0",
 		"fluent-ffmpeg": "^2.1.2",
