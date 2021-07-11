@@ -26,7 +26,8 @@ admin.initializeApp({
 })
 
 app.use(express.json())
-app.use("/song", express.static(path.join(__dirname, "..", "song")))
+app.use("/song/highest", express.static(path.join(__dirname, "..", "song", "highest")))
+app.use("/song/lowest", express.static(path.join(__dirname, "..", "song", "lowest")))
 
 IO.on("connection", socket => {
 	let inactive = false
@@ -86,21 +87,26 @@ app.put("/playlist/save", async (req, res) => {
 		.finally(() => console.timeEnd(TAG))
 })
 
-app.get("/song/:filename", (req, res) => {
-	const filename = req.params.filename
+app.get("/song/:quality_/:filename", (req, res) => {
+	const {quality_, filename} = req.params
 
+	if (!["highest", "lowest"].includes(quality_)) {
+		return res.status(400).send(`Cannot GET /song/${quality_}/${filename}`)
+	}
+
+	const quality = quality_ as "highest" | "lowest"
 	const IDRegex = filename.match(/^(.+)\.mp3$/)
 	if (IDRegex) {
-		const TAG = `save_playlist<${v4()}>:`
+		const TAG = `convert_song_${quality}<${v4()}>:`
 		console.time(TAG)
 
-		convert_song(TAG, IDRegex[1])
+		convert_song(TAG, IDRegex[1], quality)
 			.then(res.redirect.bind(res))
 			.catch(err => res.status(400).send(err.message))
 			.finally(() => console.timeEnd(TAG))
 	}
 	else {
-		res.status(400).send("Cannot GET /song/" + filename)
+		return res.status(400).send(`Cannot GET /song/${quality}/${filename}`)
 	}
 })
 

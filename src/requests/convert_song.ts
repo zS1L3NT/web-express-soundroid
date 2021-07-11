@@ -1,22 +1,22 @@
 import path from "path"
 import fs from "fs"
 import ytdl from "ytdl-core"
-import {convert_song} from "../all";
+import {convert_song} from "../all"
 
-const songsWritePath = (id: string) =>
-	path.join(__dirname, "..", "..", "song", id + ".mp3")
+let converting: { highest: string[], lowest: string[] } = {
+	highest: [],
+	lowest: []
+}
 
-let converting: string[] = []
-
-export default async (TAG: string, songId: string) => new Promise<string>(async (resolve, reject) => {
+export default async (TAG: string, songId: string, quality: "highest" | "lowest") => new Promise<string>(async (resolve, reject) => {
 	if (!songId) return reject("Missing id")
 
 	console.log(TAG, `Song`, songId)
 
-	if (converting.includes(songId)) {
+	if (converting[quality].includes(songId)) {
 		console.log(TAG, "Converting already, waiting for file...")
 		await new Promise(res => setTimeout(res, 1000))
-		resolve(await convert_song(TAG, songId))
+		resolve(await convert_song(TAG, songId, quality))
 		return
 	}
 
@@ -32,21 +32,21 @@ export default async (TAG: string, songId: string) => new Promise<string>(async 
 
 	const youtubeStream = ytdl(url, {
 		filter: "audioonly",
-		quality: "highest"
+		quality
 	})
 
 	console.log(TAG, "File creating...")
-	converting.push(songId)
+	converting[quality].push(songId)
 	youtubeStream
-		.pipe(fs.createWriteStream(songsWritePath(songId)))
+		.pipe(fs.createWriteStream(path.join(__dirname, "..", "..", "song", quality, songId + ".mp3")))
 		.on("finish", () => {
 			console.log(TAG, "Created File: " + songId)
-			resolve(`/song/${songId}.mp3`)
-			converting = converting.filter(i => i !== songId)
+			resolve(`/song/${quality}/${songId}.mp3`)
+			converting[quality] = converting[quality].filter(i => i !== songId)
 		})
 		.on("error", err => {
 			console.error(TAG, err)
 			reject(`Error converting song on Server`)
-			converting = converting.filter(i => i !== songId)
+			converting[quality] = converting[quality].filter(i => i !== songId)
 		})
 })
