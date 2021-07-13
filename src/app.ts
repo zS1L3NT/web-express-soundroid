@@ -26,6 +26,7 @@ admin.initializeApp({
 })
 
 app.use(express.json())
+app.use("/", express.static(path.join(__dirname, "..", "application")))
 app.use("/song/highest", express.static(path.join(__dirname, "..", "song", "highest")))
 app.use("/song/lowest", express.static(path.join(__dirname, "..", "song", "lowest")))
 
@@ -43,6 +44,10 @@ IO.on("connection", socket => {
 	})
 
 	socket.on("disconnect", () => inactive = true)
+})
+
+app.get("/", (req, res) =>  {
+	res.redirect("/soundroid.apk")
 })
 
 app.get("/playlist/songs", (req, res) => {
