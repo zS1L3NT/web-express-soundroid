@@ -20,6 +20,7 @@ export default async (
 	if (!query) return sendToClient("error", query, "Missing query")
 	console.time(TAG)
 	console.log(TAG, "Search: " + query)
+	sendToClient("search_message", query, "Waiting for YouTube...")
 
 	const destroy = () => {
 		console.log(TAG, "disconnect")
@@ -32,6 +33,7 @@ export default async (
 		youtubeApi.search(query, "album")
 	]).then(async res => {
 		console.timeEnd(TAG + " YouTube API Responded")
+		sendToClient("search_message", query, "Generating gradient backgrounds...")
 		if (inactive()) return destroy()
 		if (res[0].status === "fulfilled" && res[1].status === "fulfilled") {
 			const playlists_ = res[1].value.content.filter((a: any) => a.type === "album")
