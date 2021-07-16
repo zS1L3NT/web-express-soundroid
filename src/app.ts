@@ -20,6 +20,7 @@ const IO = new Server(server, {
 	pingInterval: 300000
 })
 const PORT = 5190
+const VERSION = "1.1.2"
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path)
 admin.initializeApp({
 	credential: admin.credential.cert(require("../config.json").firebase.service_account)
@@ -47,11 +48,11 @@ IO.on("connection", socket => {
 })
 
 app.get("/", (req, res) =>  {
-	res.redirect("/soundroid.apk")
+	res.redirect(`/soundroid-v${VERSION}.apk`)
 })
 
 app.get("/version", (req, res) => {
-	res.send("1.1.2")
+	res.send(VERSION)
 })
 
 app.get("/playlist/songs", (req, res) => {
