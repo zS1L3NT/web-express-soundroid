@@ -50,6 +50,10 @@ app.get("/", (req, res) =>  {
 	res.redirect("/soundroid.apk")
 })
 
+app.get("/version", (req, res) => {
+	res.send("1.1.0")
+})
+
 app.get("/playlist/songs", (req, res) => {
 	const TAG = `playlist_songs<${v4()}>:`
 	console.time(TAG)
