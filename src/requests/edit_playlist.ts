@@ -1,11 +1,21 @@
 import admin from "firebase-admin"
 import {color_thief, Playlist} from "../all";
 
-export default async (TAG: string, firestore: admin.firestore.Firestore, body: any) => {
+export default async (
+	TAG: string,
+	firestore: admin.firestore.Firestore,
+	body: any,
+	importing: { [userId: string]: string }
+) => {
 	const {info: newPlaylist, removed} = body as { info: Playlist, removed: string[] }
 	const songsColl = firestore.collection("songs")
 
 	console.log(TAG, "Data", newPlaylist)
+
+	if (Object.values(importing).includes(newPlaylist.id)) {
+		console.error(TAG, "Cannot edit a playlist that is being imported...")
+		throw new Error("Cannot edit a playlist that is being imported...")
+	}
 
 	const snap = await firestore
 		.collection("playlists")

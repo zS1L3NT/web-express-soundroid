@@ -5,7 +5,16 @@ import http from "http"
 import admin from "firebase-admin"
 import {Server} from "socket.io"
 import {v4} from "uuid"
-import {convert_song, delete_playlist, edit_playlist, edit_song, playlist_songs, save_playlist, search} from "./all"
+import {
+	convert_song,
+	delete_playlist,
+	edit_playlist,
+	edit_song,
+	import_playlist,
+	playlist_songs,
+	save_playlist,
+	search
+} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -30,6 +39,8 @@ app.use(express.json())
 app.use("/", express.static(path.join(__dirname, "..", "application")))
 app.use("/song/highest", express.static(path.join(__dirname, "..", "song", "highest")))
 app.use("/song/lowest", express.static(path.join(__dirname, "..", "song", "lowest")))
+
+const importing: { [userId: string]: string } = {}
 
 IO.on("connection", socket => {
 	let inactive = false
@@ -71,7 +82,7 @@ app.delete("/playlist/delete", (req, res) => {
 	console.time(TAG)
 	const playlistId = req.body.playlistId
 
-	delete_playlist(TAG, admin.firestore(), playlistId)
+	delete_playlist(TAG, admin.firestore(), playlistId, importing)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
 		.finally(() => console.timeEnd(TAG))
@@ -81,7 +92,7 @@ app.put("/playlist/edit", (req, res) => {
 	const TAG = `edit_playlist<${v4()}>:`
 	console.time(TAG)
 
-	edit_playlist(TAG, admin.firestore(), req.body)
+	edit_playlist(TAG, admin.firestore(), req.body, importing)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
 		.finally(() => console.timeEnd(TAG))
@@ -97,7 +108,7 @@ app.put("/song/edit", (req, res) => {
 		.finally(() => console.timeEnd(TAG))
 })
 
-app.put("/playlist/save", async (req, res) => {
+app.put("/playlist/save", (req, res) => {
 	const TAG = `save_playlist<${v4()}>:`
 	console.time(TAG)
 
@@ -105,6 +116,19 @@ app.put("/playlist/save", async (req, res) => {
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
 		.finally(() => console.timeEnd(TAG))
+})
+
+app.post("/playlist/import", (req, res) => {
+	const TAG = `import_playlist<${v4()}>:`
+	console.time(TAG)
+
+	import_playlist(TAG, admin.firestore(), youtubeApi, req.body, importing, () => res.status(200).send())
+		.then(() => console.log(TAG, "All Songs added"))
+		.catch(err => res.status(400).send(err.message))
+		.finally(() => {
+			console.timeEnd(TAG)
+			delete importing[req.body.userId]
+		})
 })
 
 app.get("/song/:quality_/:filename", (req, res) => {
