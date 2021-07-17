@@ -5,7 +5,7 @@ import http from "http"
 import admin from "firebase-admin"
 import {Server} from "socket.io"
 import {v4} from "uuid"
-import {convert_song, delete_playlist, edit_playlist, playlist_songs, save_playlist, search} from "./all"
+import {convert_song, delete_playlist, edit_playlist, edit_song, playlist_songs, save_playlist, search} from "./all"
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -82,6 +82,16 @@ app.put("/playlist/edit", (req, res) => {
 	console.time(TAG)
 
 	edit_playlist(TAG, admin.firestore(), req.body)
+		.then(() => res.status(200).send())
+		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
+})
+
+app.put("/song/edit", (req, res) => {
+	const TAG = `edit_song<${v4()}>`
+	console.time(TAG)
+
+	edit_song(TAG, admin.firestore(), req.body)
 		.then(() => res.status(200).send())
 		.catch(err => res.status(400).send(err.message))
 		.finally(() => console.timeEnd(TAG))

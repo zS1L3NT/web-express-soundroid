@@ -5,6 +5,7 @@ export {default as color_thief} from "./color_thief"
 export {default as save_playlist} from "./requests/save_playlist"
 export {default as edit_playlist} from "./requests/edit_playlist"
 export {default as delete_playlist} from "./requests/delete_playlist"
+export {default as edit_song} from "./requests/edit_song"
 
 export interface Song {
 	type: "Song"
