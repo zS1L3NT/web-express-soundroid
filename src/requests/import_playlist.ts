@@ -12,13 +12,14 @@ export default async (
 	const {url, userId} = body as { url: string, userId: string }
 	const link = new URL(url)
 	const spotify = new Spotify()
+	let data
 
 	if (link.host === "open.spotify.com") {
 		const playlistId = link.pathname.match(/^\/playlist\/(.*)/)?.[1]
 		const albumId = link.pathname.match(/^\/album\/(.*)/)?.[1]
 		const firestoreId = firestore.collection("playlists").doc().id
 
-		const queries: string[] = []
+		const queries: [string, string][] = []
 		if (!playlistId && !albumId) {
 			console.error(TAG, "Spotify URL does not reference a playlist")
 			throw new Error("Spotify URL does not reference a playlist")
@@ -36,12 +37,19 @@ export default async (
 			const tracks = playlist.tracks.items
 			console.log(TAG, "Spotify Playlist Tracks: ", tracks.length)
 
-			for (let i = 0; i < tracks.length; i++) {
-				const track = tracks[i].track
-				queries.push(`${track?.name || ""} ${track?.artists[0]?.name || ""} ${track?.album?.name || ""}`)
+			for (let i = 0; i < playlist.tracks.total; i += 100) {
+				const playlist = await spotify.getPlaylistTracks(playlistId, i)
+				const tracks = playlist.items
+				for (let i = 0; i < tracks.length; i++) {
+					const track = tracks[i].track
+					queries.push([
+						`${track?.name || ""} ${track?.artists[0]?.name || ""} ${track?.album?.name || ""}`,
+						track?.album?.images?.[0]?.url || ""
+					])
+				}
 			}
 
-			await firestore.collection("playlists").doc(firestoreId).set({
+			data = {
 				colorHex: await color_thief(playlist.images[0]?.url || ""),
 				cover: playlist.images[0]?.url || "",
 				id: firestoreId,
@@ -49,44 +57,56 @@ export default async (
 				order: [],
 				queries: getQueries(playlist.name),
 				userId
-			})
+			}
 		}
 
 		if (albumId) {
 			console.log(TAG, "Spotify Album ID    : ", albumId)
 			const album = await spotify.getAlbum(albumId)
-			const tracks = album.tracks.items
-			console.log(TAG, "Spotify Album Tracks: ", tracks.length)
+			const cover = album?.images?.[0]?.url || ""
+			const name = album?.name || ""
+			console.log(TAG, "Spotify Album Tracks: ", album.tracks.total)
 
-			for (let i = 0; i < tracks.length; i++) {
-				const track = tracks[i]
-				queries.push(`${track?.name || ""} ${track?.artists[0]?.name || ""} ${track?.album?.name || ""}`)
+			for (let i = 0; i < album.tracks.total; i += 100) {
+				const album = await spotify.getAlbumTracks(albumId, i)
+				const tracks = album.items
+				for (let i = 0; i < tracks.length; i++) {
+					const track = tracks[i]
+					queries.push([
+						`${track?.name || ""} ${track?.artists[0]?.name || ""} ${name}`,
+						cover
+					])
+				}
 			}
 
-			await firestore.collection("playlists").doc(firestoreId).set({
+			data = {
 				colorHex: await color_thief(album.images[0]?.url || ""),
-				cover: album.images[0]?.url || "",
+				cover,
 				id: firestoreId,
 				name: album.name,
 				order: [],
 				queries: getQueries(album.name),
 				userId
-			})
+			}
 		}
 
+		await firestore
+			.collection("playlists")
+			.doc(firestoreId)
+			.set(data)
 		respond()
 
 		const order: string[] = []
 		for (let i = 0; i < queries.length; i++) {
 			const query = queries[i]
-			const results = await youtubeApi.search(query, "song")
+			const results = await youtubeApi.search(query[0], "song")
 			const data = results.content[0]
 
 			order.push(data.videoId)
 			const song = {
 				artiste: data?.artist?.name || "",
-				colorHex: await color_thief(`https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`),
-				cover: `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`,
+				colorHex: await color_thief(query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`),
+				cover: query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`,
 				playlistId: firestoreId,
 				queries: getQueries(data.name),
 				songId: data.videoId,
@@ -94,7 +114,7 @@ export default async (
 				userId
 			}
 
-			console.log(TAG, "Song: ", song.songId)
+			console.log(TAG, `Song<${i}>: `, song.songId)
 
 			await firestore.collection("songs").add(song)
 			await firestore.collection("playlists").doc(firestoreId).update({
