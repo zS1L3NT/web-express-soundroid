@@ -30,7 +30,7 @@ const IO = new Server(server, {
 	pingInterval: 300000
 })
 const PORT = 5190
-const VERSION = "1.2.2"
+const VERSION = "1.2.3"
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path)
 admin.initializeApp({
 	credential: admin.credential.cert(require("../config.json").firebase.service_account)
