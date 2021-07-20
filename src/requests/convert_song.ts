@@ -1,11 +1,22 @@
 import path from "path"
 import fs from "fs"
 import ytdl from "ytdl-core"
-import {convert_song} from "../all"
 
-let converting: { highest: string[], lowest: string[] } = {
-	highest: [],
-	lowest: []
+type PromiseCallback = {
+	resolve: (value: (PromiseLike<string> | string)) => void,
+	reject: (reason?: any) => void
+}
+
+let converting: {
+	highest: {
+		[songId: string]: PromiseCallback[]
+	},
+	lowest: {
+		[songId: string]: PromiseCallback[]
+	}
+} = {
+	highest: {},
+	lowest: {}
 }
 
 export default async (TAG: string, songId: string, quality: "highest" | "lowest") => new Promise<string>(async (resolve, reject) => {
@@ -13,10 +24,9 @@ export default async (TAG: string, songId: string, quality: "highest" | "lowest"
 
 	console.log(TAG, `Song`, songId)
 
-	if (converting[quality].includes(songId)) {
+	if (converting[quality][songId]) {
+		converting[quality][songId].push({resolve, reject})
 		console.log(TAG, "Converting already, waiting for file...")
-		await new Promise(res => setTimeout(res, 1000))
-		resolve(await convert_song(TAG, songId, quality))
 		return
 	}
 
@@ -35,18 +45,25 @@ export default async (TAG: string, songId: string, quality: "highest" | "lowest"
 		quality
 	})
 
+	const partPath = path.join(__dirname, "..", "..", "part", quality, songId + ".mp3")
+	const songPath = path.join(__dirname, "..", "..", "song", quality, songId + ".mp3")
+
 	console.log(TAG, "File creating...")
-	converting[quality].push(songId)
+	converting[quality][songId] = []
 	youtubeStream
-		.pipe(fs.createWriteStream(path.join(__dirname, "..", "..", "song", quality, songId + ".mp3")))
+		.pipe(fs.createWriteStream(partPath))
 		.on("finish", () => {
+			fs.renameSync(partPath, songPath)
 			console.log(TAG, "Created File: " + songId)
 			resolve(`/song/${quality}/${songId}.mp3`)
-			converting[quality] = converting[quality].filter(i => i !== songId)
+			converting[quality][songId].forEach(p => p.resolve(`/song/${quality}/${songId}.mp3`))
+			delete converting[quality][songId]
 		})
 		.on("error", err => {
+			fs.unlinkSync(partPath)
 			console.error(TAG, err)
 			reject(`Error converting song on Server`)
-			converting[quality] = converting[quality].filter(i => i !== songId)
+			converting[quality][songId].forEach(p => p.reject(`Error converting song on Server`))
+			delete converting[quality][songId]
 		})
 })
