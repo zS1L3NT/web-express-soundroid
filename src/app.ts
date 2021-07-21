@@ -37,6 +37,9 @@ admin.initializeApp({
 })
 
 app.use(express.json())
+app.set('view engine', 'ejs');
+app.set("views", path.join(__dirname, "views"))
+app.use("/assets", express.static(path.join(__dirname, "assets")))
 app.use("/", express.static(path.join(__dirname, "..", "application")))
 app.use("/part/highest", express.static(path.join(__dirname, "..", "part", "highest")))
 app.use("/part/lowest", express.static(path.join(__dirname, "..", "part", "lowest")))
@@ -62,7 +65,7 @@ IO.on("connection", socket => {
 })
 
 app.get("/", (req, res) =>  {
-	res.redirect(`/soundroid-v${VERSION}.apk`)
+	res.render('index', { version: VERSION })
 })
 
 app.get("/version", (req, res) => {
