@@ -30,19 +30,15 @@ export default async (TAG: string, songId: string, quality: "highest" | "lowest"
 		return
 	}
 
-	const url = "https://youtu.be/" + songId
-	try {
-		console.log(TAG, "Fetching: " + songId)
-		await ytdl.getBasicInfo(url)
-		console.log(TAG, "Found   : " + songId)
-	} catch (e) {
-		console.error(TAG, "Invalid YouTube ID")
-		return reject("Invalid YouTube ID")
-	}
-
-	const youtubeStream = ytdl(url, {
+	const youtubeStream = ytdl("https://youtu.be/" + songId, {
 		filter: "audioonly",
 		quality
+	}).on("error", err => {
+		fs.unlinkSync(partPath)
+		console.error(TAG, err)
+		reject("Invalid YouTube ID!")
+		converting[quality][songId].forEach(p => p.reject(`Error converting song on Server`))
+		delete converting[quality][songId]
 	})
 
 	const partPath = path.join(__dirname, "..", "..", "part", quality, songId + ".mp3")
