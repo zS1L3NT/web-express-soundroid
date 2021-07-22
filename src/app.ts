@@ -6,16 +6,17 @@ import admin from "firebase-admin"
 import {Server} from "socket.io"
 import {v4} from "uuid"
 import {
-	convert_song,
 	delete_playlist,
 	edit_playlist,
 	edit_song,
+	get_full_song,
+	get_ping_song,
+	get_play_song,
 	import_playlist,
 	playlist_songs,
 	save_playlist,
 	search
 } from "./all"
-import fs from "fs";
 
 const YoutubeMusicApi = require("youtube-music-api")
 
@@ -64,11 +65,11 @@ IO.on("connection", socket => {
 	socket.on("disconnect", () => inactive = true)
 })
 
-app.get("/", (req, res) =>  {
+app.get("/", (_req, res) =>  {
 	res.render('index', { version: VERSION })
 })
 
-app.get("/version", (req, res) => {
+app.get("/version", (_req, res) => {
 	res.send(VERSION)
 })
 
@@ -137,54 +138,11 @@ app.post("/playlist/import", (req, res) => {
 		})
 })
 
-app.get("/play/:quality_/:filename", (req, res) => {
-	const {quality_, filename} = req.params
+app.get("/song/:quality_/:filename", get_full_song)
 
-	if (!["highest", "lowest"].includes(quality_)) {
-		return res.status(400).send(`Cannot GET /play/${quality_}/${filename}`)
-	}
+app.get("/ping/:quality_/:filename", get_ping_song)
 
-	const quality = quality_ as "highest" | "lowest"
-	const IDRegex = filename.match(/^(.+)\.mp3$/)
-	if (IDRegex) {
-		if (fs.existsSync(path.join(__dirname, "..", "song", quality, filename))) {
-			return res.redirect(`/song/${quality}/${filename}`)
-		} else if (fs.existsSync(path.join(__dirname, "..", "part", quality, filename))) {
-			return res.redirect(`/part/${quality}/${filename}`)
-		} else {
-			convert_song(`convert_song_${quality}<${v4()}>:`, IDRegex[1], quality)
-			setTimeout(() => {
-				res.redirect(`/part/${quality}/${filename}`)
-			}, 10000)
-		}
-	}
-	else {
-		return res.status(400).send(`Cannot GET /play/${quality}/${filename}`)
-	}
-})
-
-app.get("/song/:quality_/:filename", (req, res) => {
-	const {quality_, filename} = req.params
-
-	if (!["highest", "lowest"].includes(quality_)) {
-		return res.status(400).send(`Cannot GET /song/${quality_}/${filename}`)
-	}
-
-	const quality = quality_ as "highest" | "lowest"
-	const IDRegex = filename.match(/^(.+)\.mp3$/)
-	if (IDRegex) {
-		const TAG = `convert_song_${quality}<${v4()}>:`
-		console.time(TAG)
-
-		convert_song(TAG, IDRegex[1], quality)
-			.then(res.redirect.bind(res))
-			.catch(err => res.status(400).send(err.message))
-			.finally(() => console.timeEnd(TAG))
-	}
-	else {
-		return res.status(400).send(`Cannot GET /song/${quality}/${filename}`)
-	}
-})
+app.get("/play/:quality_/:filename", get_play_song)
 
 youtubeApi.initalize().then(() => console.log("Initialized YouTube API"))
 server.listen(PORT, () => console.log(`Server started on PORT ${PORT}`))
