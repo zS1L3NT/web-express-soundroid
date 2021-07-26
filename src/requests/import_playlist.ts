@@ -99,7 +99,7 @@ export default async (
 		const order: string[] = []
 		for (let i = 0; i < queries.length; i++) {
 			const query = queries[i]
-			if (query.filter(c => c === " ").length === 0) continue
+			if (query[0] === "  ") continue
 			const results = await youtubeApi.search(query[0], "song")
 			const data = results.content[0]
 
