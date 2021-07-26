@@ -13,6 +13,7 @@ import {
 	get_ping_song,
 	get_play_song,
 	import_playlist,
+	default_playlists,
 	playlist_songs,
 	save_playlist,
 	search
@@ -136,6 +137,21 @@ app.post("/playlist/import", (req, res) => {
 			console.timeEnd(TAG)
 			delete importing[req.body.userId]
 		})
+})
+
+app.post("/playlists/default", (req, res) => {
+	const TAG = `default_playlists<${v4()}>:`
+	console.time(TAG)
+	const userId = req.body.userId
+
+	default_playlists(
+		TAG,
+		admin.firestore(),
+		userId
+	)
+		.then(() => console.log(TAG, "All Songs added"))
+		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
 })
 
 app.get("/song/:quality_/:filename", get_full_song)
