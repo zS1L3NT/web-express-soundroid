@@ -30,7 +30,7 @@ export default (req: Request, res: Response) => {
 			)
 			setTimeout(() => {
 				res.redirect(`/part/${quality}/${filename}`)
-			}, 10000)
+			}, 3000)
 		}
 	} else {
 		return res.status(400).send(`Cannot GET /play/${quality}/${filename}`)
