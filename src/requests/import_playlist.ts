@@ -99,28 +99,31 @@ export default async (
 		const order: string[] = []
 		for (let i = 0; i < queries.length; i++) {
 			const query = queries[i]
-			if (query[0] === "  ") continue
-			const results = await youtubeApi.search(query[0], "song")
-			const data = results.content[0]
+			try {
+				const results = await youtubeApi.search(query[0], "song")
+				const data = results.content[0]
 
-			order.push(data.videoId)
-			const song = {
-				artiste: data?.artist?.name || "",
-				colorHex: await color_thief(query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`),
-				cover: query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`,
-				playlistId: firestoreId,
-				queries: getQueries(data.name),
-				songId: data.videoId,
-				title: data.name,
-				userId
+				order.push(data.videoId)
+				const song = {
+					artiste: data?.artist?.name || "",
+					colorHex: await color_thief(query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`),
+					cover: query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`,
+					playlistId: firestoreId,
+					queries: getQueries(data.name),
+					songId: data.videoId,
+					title: data.name,
+					userId
+				}
+
+				console.log(TAG, `Song<${i}>: `, song.songId)
+
+				await firestore.collection("songs").add(song)
+				await firestore.collection("playlists").doc(firestoreId).update({
+					order
+				})
+			} catch (err) {
+				console.error(TAG, err)
 			}
-
-			console.log(TAG, `Song<${i}>: `, song.songId)
-
-			await firestore.collection("songs").add(song)
-			await firestore.collection("playlists").doc(firestoreId).update({
-				order
-			})
 		}
 	} else {
 		console.error(TAG, "URL does not reference a playlist")
