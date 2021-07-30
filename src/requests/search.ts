@@ -67,8 +67,7 @@ export default async (
 			cover: playlist.thumbnails[playlist.thumbnails.length - 1].url,
 			userId: "",
 			colorHex: await color_thief(playlist.thumbnails[playlist.thumbnails.length - 1].url),
-			order: (await youtubeApi.getAlbum(playlist.browseId)).tracks.map(track => track.videoId),
-			queries: getQueries(playlist.name)
+			order: (await youtubeApi.getAlbum(playlist.browseId)).tracks.map(track => track.videoId)
 		}
 		sendToClient("search_result", query, item)
 		resolve(item)
@@ -84,18 +83,9 @@ export default async (
 			cover: `https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`,
 			colorHex: await color_thief(`https://i.ytimg.com/vi/${song.videoId}/maxresdefault.jpg`),
 			playlistId: "",
-			userId: "",
-			queries: getQueries(song.name)
+			userId: ""
 		}
 		sendToClient("search_result", query, item)
 		resolve(item)
 	})
-}
-
-const getQueries = (str: string) => {
-	const queries: string[] = []
-	for (let i = 0; i < str.length; i++) {
-		queries.push(str.slice(0, i + 1).toLowerCase())
-	}
-	return queries
 }

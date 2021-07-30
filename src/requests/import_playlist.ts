@@ -1,5 +1,5 @@
 import admin from "firebase-admin"
-import {color_thief, Spotify} from "../all";
+import {color_thief, Playlist, Song, Spotify} from "../all";
 
 export default async (
 	TAG: string,
@@ -12,7 +12,7 @@ export default async (
 	const {url, userId} = body as { url: string, userId: string }
 	const link = new URL(url)
 	const spotify = new Spotify()
-	let data
+	let data: Playlist
 
 	if (link.host === "open.spotify.com") {
 		const playlistId = link.pathname.match(/^\/playlist\/(.*)/)?.[1]
@@ -55,7 +55,6 @@ export default async (
 				id: firestoreId,
 				name: playlist.name,
 				order: [],
-				queries: getQueries(playlist.name),
 				userId
 			}
 		}
@@ -85,7 +84,6 @@ export default async (
 				id: firestoreId,
 				name: album.name,
 				order: [],
-				queries: getQueries(album.name),
 				userId
 			}
 		}
@@ -93,7 +91,7 @@ export default async (
 		await firestore
 			.collection("playlists")
 			.doc(firestoreId)
-			.set(data)
+			.set(data!)
 		respond()
 
 		const order: string[] = []
@@ -104,12 +102,11 @@ export default async (
 				const data = results.content[0]
 
 				order.push(data.videoId)
-				const song = {
+				const song: Song = {
 					artiste: data?.artist?.name || "",
 					colorHex: await color_thief(query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`),
 					cover: query[1] || `https://i.ytimg.com/vi/${data.videoId}/maxresdefault.jpg`,
 					playlistId: firestoreId,
-					queries: getQueries(data.name),
 					songId: data.videoId,
 					title: data.name,
 					userId
@@ -129,12 +126,4 @@ export default async (
 		console.error(TAG, "URL does not reference a playlist")
 		throw new Error("URL does not reference a playlist")
 	}
-}
-
-const getQueries = (str: string) => {
-	const queries: string[] = []
-	for (let i = 0; i < str.length; i++) {
-		queries.push(str.slice(0, i + 1).toLowerCase())
-	}
-	return queries
 }

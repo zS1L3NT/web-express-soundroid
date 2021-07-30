@@ -18,17 +18,8 @@ export default async (TAG: string, id: any, youtubeApi: any) => {
 			cover: track.thumbnails[track.thumbnails.length - 1].url,
 			colorHex: await color_thief(track.thumbnails[track.thumbnails.length - 1].url),
 			playlistId: id,
-			userId: "",
-			queries: getQueries(track.name)
+			userId: ""
 		} as Song))())
 	}
 	return await Promise.all(promises)
-}
-
-const getQueries = (str: string) => {
-	const queries: string[] = []
-	for (let i = 0; i < str.length; i++) {
-		queries.push(str.slice(0, i + 1).toLowerCase())
-	}
-	return queries
 }

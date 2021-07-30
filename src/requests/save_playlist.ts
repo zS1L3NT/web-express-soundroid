@@ -23,8 +23,7 @@ export default async (TAG: string, firestore: admin.firestore.Firestore, youtube
 			songId: song.songId,
 			title: song.title,
 			playlistId: id,
-			userId: playlist.userId,
-			queries: getQueries(song.title)
+			userId: playlist.userId
 		}))
 	}
 	promises.push(playlistDoc.set({
@@ -33,17 +32,8 @@ export default async (TAG: string, firestore: admin.firestore.Firestore, youtube
 		id,
 		name: playlist.name,
 		userId: playlist.userId,
-		order: songs.map(s => s.songId),
-		queries: getQueries(playlist.name)
+		order: songs.map(s => s.songId)
 	} as Playlist))
 
 	await Promise.allSettled(promises)
-}
-
-const getQueries = (str: string) => {
-	const queries: string[] = []
-	for (let i = 0; i < str.length; i++) {
-		queries.push(str.slice(0, i + 1).toLowerCase())
-	}
-	return queries
 }
