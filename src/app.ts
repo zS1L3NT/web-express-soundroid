@@ -32,10 +32,10 @@ const IO = new Server(server, {
 	pingInterval: 300000
 })
 const PORT = 5190
-const VERSION = "1.3.10"
 ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path)
 admin.initializeApp({
-	credential: admin.credential.cert(require("../config.json").firebase.service_account)
+	credential: admin.credential.cert(require("../config.json").firebase.service_account),
+	databaseURL: "https://android-soundroid-default-rtdb.asia-southeast1.firebasedatabase.app"
 })
 
 app.use(express.json())
@@ -49,6 +49,13 @@ app.use("/song/highest", express.static(path.join(__dirname, "..", "song", "high
 app.use("/song/lowest", express.static(path.join(__dirname, "..", "song", "lowest")))
 
 const importing: { [userId: string]: string } = {}
+
+var VERSION = ""
+admin.database().ref("/VERSION").on("value", snap => {
+	if (snap.exists()) {
+		VERSION = snap.val()
+	}
+})
 
 IO.on("connection", socket => {
 	let inactive = false
