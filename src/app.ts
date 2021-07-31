@@ -42,7 +42,6 @@ app.use(express.json())
 app.set('view engine', 'ejs');
 app.set("views", path.join(__dirname, "views"))
 app.use("/assets", express.static(path.join(__dirname, "assets")))
-app.use("/", express.static(path.join(__dirname, "..", "application")))
 app.use("/part/highest", express.static(path.join(__dirname, "..", "part", "highest")))
 app.use("/part/lowest", express.static(path.join(__dirname, "..", "part", "lowest")))
 app.use("/song/highest", express.static(path.join(__dirname, "..", "song", "highest")))
@@ -71,6 +70,19 @@ IO.on("connection", socket => {
 	})
 
 	socket.on("disconnect", () => inactive = true)
+})
+
+app.get(/^\/soundroid-v.*\.apk/, (req, res) => {
+	admin
+		.storage()
+		.bucket("gs://android-soundroid.appspot.com")
+		.file(`soundroid-v${VERSION}.apk`)
+		.getSignedUrl({
+			action: "read",
+			expires: Date.now() + 15 * 60 * 1000
+		})
+		.then(url => res.redirect(url[0]))
+		.catch(() => res.status(400).send("APK doesn't exist on the server :O"))
 })
 
 app.get("/", (_req, res) =>  {
