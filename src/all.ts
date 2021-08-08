@@ -12,6 +12,7 @@ export {default as import_playlist} from "./requests/import_playlist"
 export {default as get_full_song} from "./requests/get_full_song"
 export {default as get_ping_song} from "./requests/get_ping_song"
 export {default as get_play_song} from "./requests/get_play_song"
+export { default as get_lyrics } from "./requests/get_lyrics"
 
 export interface Song {
 	type?: "Song"

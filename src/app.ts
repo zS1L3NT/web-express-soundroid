@@ -16,14 +16,17 @@ import {
 	default_playlists,
 	playlist_songs,
 	save_playlist,
-	search
+	search,
+	get_lyrics
 } from "./all"
 
+const GeniusApi = require("node-genius-api")
 const YoutubeMusicApi = require("youtube-music-api")
 
 const app = express()
 const server = http.createServer(app)
 const youtubeApi = new YoutubeMusicApi()
+const genius = new GeniusApi(require("../config.json").genius)
 const IO = new Server(server, {
 	cors: {
 		origin: "*"
@@ -169,6 +172,17 @@ app.post("/playlists/default", (req, res) => {
 		userId
 	)
 		.then(() => console.log(TAG, "All Songs added"))
+		.catch(err => res.status(400).send(err.message))
+		.finally(() => console.timeEnd(TAG))
+})
+
+app.get("/song/lyrics", (req, res) => {
+	const TAG = `get_lyrics<${v4()}>:`
+	console.time(TAG)
+	const query = req.query.query
+
+	get_lyrics(TAG, genius, query)
+		.then(lines => res.status(200).send(lines))
 		.catch(err => res.status(400).send(err.message))
 		.finally(() => console.timeEnd(TAG))
 })
