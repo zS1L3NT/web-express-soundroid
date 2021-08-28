@@ -7,7 +7,7 @@ export default async (
 	userId: string
 ) => {
 	console.log(TAG, "Defaulting for userId: " + userId)
-	
+
 	const COMTPlaylistId = firestore.collection("playlists").doc().id
 	const COMTPlaylist: Playlist = {
 		id: COMTPlaylistId,
@@ -28,23 +28,23 @@ export default async (
 			userId
 		},
 		{
-            songId: "Kr4EQDVETuA",
-            title: "Billie Jean",
-            artiste: "Michael Jackson",
-            cover: "https://i.ytimg.com/vi/Kr4EQDVETuA/maxresdefault.jpg",
-            colorHex: "#535C5B",
-            playlistId: COMTPlaylistId,
-            userId
-        },
-        {
-            songId: "SlbfAYvA_gI",
-            title: "Photograph",
-            artiste: "Ed Sheeran",
-            cover: "https://i.ytimg.com/vi/SlbfAYvA_gI/maxresdefault.jpg",
-            colorHex: "#008621",
-            playlistId: COMTPlaylistId,
-            userId
-        }
+			songId: "Kr4EQDVETuA",
+			title: "Billie Jean",
+			artiste: "Michael Jackson",
+			cover: "https://i.ytimg.com/vi/Kr4EQDVETuA/maxresdefault.jpg",
+			colorHex: "#535C5B",
+			playlistId: COMTPlaylistId,
+			userId
+		},
+		{
+			songId: "SlbfAYvA_gI",
+			title: "Photograph",
+			artiste: "Ed Sheeran",
+			cover: "https://i.ytimg.com/vi/SlbfAYvA_gI/maxresdefault.jpg",
+			colorHex: "#008621",
+			playlistId: COMTPlaylistId,
+			userId
+		}
 	]
 
 	const IUPlaylistId = firestore.collection("playlists").doc().id

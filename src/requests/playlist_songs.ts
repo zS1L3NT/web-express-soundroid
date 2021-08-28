@@ -1,4 +1,4 @@
-import {color_thief, Song} from "../all"
+import { color_thief, Song } from "../all"
 
 export default async (TAG: string, id: any, youtubeApi: any) => {
 	if (!id) throw new Error("Missing Playlist ID")

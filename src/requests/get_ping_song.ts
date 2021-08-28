@@ -14,10 +14,12 @@ export default (req: Request, res: Response) => {
 	if (IDRegex) {
 		if (fs.existsSync(path.join(__dirname, "..", "..", "song", quality, IDRegex[1] + ".mp3"))) {
 			return res.status(200).send()
-		} else {
+		}
+		else {
 			return res.status(404).send()
 		}
-	} else {
+	}
+	else {
 		return res.status(400).send(`Cannot GET /ping/${quality}/${filename}`)
 	}
 }

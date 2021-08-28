@@ -1,5 +1,5 @@
 import admin from "firebase-admin"
-import {color_thief, Song} from "../all";
+import { color_thief, Song } from "../all"
 
 export default async (TAG: string, firestore: admin.firestore.Firestore, body: any) => {
 	const song = body as Song

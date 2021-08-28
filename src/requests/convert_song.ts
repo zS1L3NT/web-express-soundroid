@@ -25,7 +25,7 @@ export default async (TAG: string, songId: string, quality: "highest" | "lowest"
 	console.log(TAG, `Song`, songId)
 
 	if (converting[quality][songId]) {
-		converting[quality][songId].push({resolve, reject})
+		converting[quality][songId].push({ resolve, reject })
 		console.log(TAG, "Converting already, waiting for file...")
 		return
 	}

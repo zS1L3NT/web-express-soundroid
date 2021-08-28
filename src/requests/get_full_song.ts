@@ -19,7 +19,8 @@ export default (req: Request, res: Response) => {
 			.then(res.redirect.bind(res))
 			.catch(err => res.status(400).send(err.message))
 			.finally(() => console.timeEnd(TAG))
-	} else {
+	}
+	else {
 		return res.status(400).send(`Cannot GET /song/${quality}/${filename}`)
 	}
 }

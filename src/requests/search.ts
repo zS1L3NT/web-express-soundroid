@@ -1,5 +1,5 @@
-import {color_thief, Playlist, Song} from "../all"
-import {v4} from "uuid"
+import { color_thief, Playlist, Song } from "../all"
+import { v4 } from "uuid"
 
 /**
  * Endpoint to search the API for song results

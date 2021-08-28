@@ -3,21 +3,21 @@ import ffmpeg from "fluent-ffmpeg"
 import path from "path"
 import http from "http"
 import admin from "firebase-admin"
-import {Server} from "socket.io"
-import {v4} from "uuid"
+import { Server } from "socket.io"
+import { v4 } from "uuid"
 import {
+	default_playlists,
 	delete_playlist,
 	edit_playlist,
 	edit_song,
 	get_full_song,
+	get_lyrics,
 	get_ping_song,
 	get_play_song,
 	import_playlist,
-	default_playlists,
 	playlist_songs,
 	save_playlist,
-	search,
-	get_lyrics
+	search
 } from "./all"
 
 const GeniusApi = require("node-genius-api")
@@ -42,7 +42,7 @@ admin.initializeApp({
 })
 
 app.use(express.json())
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs")
 app.set("views", path.join(__dirname, "views"))
 app.use("/assets", express.static(path.join(__dirname, "assets")))
 app.use("/part/highest", express.static(path.join(__dirname, "..", "part", "highest")))
@@ -52,7 +52,7 @@ app.use("/song/lowest", express.static(path.join(__dirname, "..", "song", "lowes
 
 const importing: { [userId: string]: string } = {}
 
-var VERSION = ""
+let VERSION = ""
 admin.database().ref("/VERSION").on("value", snap => {
 	if (snap.exists()) {
 		VERSION = snap.val()
@@ -88,8 +88,8 @@ app.get(/^\/soundroid-v.*\.apk/, (req, res) => {
 		.catch(() => res.status(400).send("APK doesn't exist on the server :O"))
 })
 
-app.get("/", (_req, res) =>  {
-	res.render('index', { version: VERSION })
+app.get("/", (_req, res) => {
+	res.render("index", { version: VERSION })
 })
 
 app.get("/version", (_req, res) => {

@@ -18,11 +18,13 @@ export default (req: Request, res: Response) => {
 			fs.existsSync(path.join(__dirname, "..", "..", "song", quality, filename))
 		) {
 			return res.redirect(`/song/${quality}/${filename}`)
-		} else if (
+		}
+		else if (
 			fs.existsSync(path.join(__dirname, "..", "..", "part", quality, filename))
 		) {
 			return res.redirect(`/part/${quality}/${filename}`)
-		} else {
+		}
+		else {
 			convert_song(
 				`convert_song_${quality}<${v4()}>:`,
 				IDRegex[1],
@@ -32,7 +34,8 @@ export default (req: Request, res: Response) => {
 				res.redirect(`/part/${quality}/${filename}`)
 			}, 3000)
 		}
-	} else {
+	}
+	else {
 		return res.status(400).send(`Cannot GET /play/${quality}/${filename}`)
 	}
 }

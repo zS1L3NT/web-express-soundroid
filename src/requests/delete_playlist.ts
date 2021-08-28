@@ -6,7 +6,7 @@ export default async (
 	playlistId: string,
 	importing: { [userId: string]: string }
 ) => {
-	const playlistDoc = firestore.collection("playlists").doc(playlistId);
+	const playlistDoc = firestore.collection("playlists").doc(playlistId)
 	const songsColl = firestore.collection("songs")
 
 	console.log(TAG, `Playlist`, playlistId)

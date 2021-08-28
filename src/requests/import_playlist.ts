@@ -1,5 +1,5 @@
 import admin from "firebase-admin"
-import {color_thief, Playlist, Song, Spotify} from "../all";
+import { color_thief, Playlist, Song, Spotify } from "../all"
 
 export default async (
 	TAG: string,
@@ -9,7 +9,7 @@ export default async (
 	importing: { [userId: string]: string },
 	respond: () => void
 ) => {
-	const {url, userId} = body as { url: string, userId: string }
+	const { url, userId } = body as { url: string, userId: string }
 	const link = new URL(url)
 	const spotify = new Spotify()
 	let data: Playlist
@@ -122,7 +122,8 @@ export default async (
 				console.error(TAG, err)
 			}
 		}
-	} else {
+	}
+	else {
 		console.error(TAG, "URL does not reference a playlist")
 		throw new Error("URL does not reference a playlist")
 	}

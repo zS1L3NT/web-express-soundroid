@@ -6,7 +6,7 @@ export default async (TAG: string, genius: any, query: any) => {
 
 	if (!song) throw new Error(`Could not find lyrics for this song`)
 
-	const lyrics = await genius.lyrics(`${song.result.id}`)
+	const lyrics = await genius.lyrics(song.result.id)
 	const lines: string[] = []
 	for (let i = 0, il = lyrics.length; i < il; i++) {
 		const part = lyrics[i]

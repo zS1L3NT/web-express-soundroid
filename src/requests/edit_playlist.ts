@@ -1,5 +1,5 @@
 import admin from "firebase-admin"
-import {color_thief, Playlist} from "../all";
+import { color_thief, Playlist } from "../all"
 
 export default async (
 	TAG: string,
@@ -7,7 +7,7 @@ export default async (
 	body: any,
 	importing: { [userId: string]: string }
 ) => {
-	const {info: newPlaylist, removed} = body as { info: Playlist, removed: string[] }
+	const { info: newPlaylist, removed } = body as { info: Playlist, removed: string[] }
 	const songsColl = firestore.collection("songs")
 
 	console.log(TAG, "Data", newPlaylist)

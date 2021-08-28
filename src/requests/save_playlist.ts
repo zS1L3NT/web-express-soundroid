@@ -1,6 +1,6 @@
-import {Playlist, playlist_songs} from "../all";
+import { Playlist, playlist_songs } from "../all"
 import admin from "firebase-admin"
-import {v4} from "uuid";
+import { v4 } from "uuid"
 
 export default async (TAG: string, firestore: admin.firestore.Firestore, youtubeApi: any, body: any) => {
 	const playlist = body as Playlist
